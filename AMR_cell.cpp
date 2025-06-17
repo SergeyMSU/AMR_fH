@@ -67,16 +67,59 @@ AMR_cell* AMR_cell::find_cell(const double& x, const double& y, const double& z,
 AMR_cell* AMR_cell::get_sosed(AMR_f* AMR, short int nn)
 {
 	// Нужно проверить, вдруг это основная ячейка, у которой нет родителя
+
+	auto nn1 = this->cells.shape()[0];
+	auto nn2 = this->cells.shape()[1];
+	auto nn3 = this->cells.shape()[2];
 	
 	if (this->level == 0)
 	{
-		if (this->nx > 0)
-		{
-			return AMR->cells[this->nx - 1][this->ny][this->nz];
-		}
-		else
-		{
-			return nullptr;
+		switch (nn) {
+		case 0:
+			if (this->nx < nn1 - 1)
+			{
+				return AMR->cells[this->nx + 1][this->ny][this->nz];
+			}
+			else { return nullptr; }
+			break;
+		case 1:
+			if (this->nx > 0)
+			{
+				return AMR->cells[this->nx - 1][this->ny][this->nz];
+			}
+			else { return nullptr; }
+			break;
+		case 2:
+			if (this->ny < nn2 - 1)
+			{
+				return AMR->cells[this->nx][this->ny + 1][this->nz];
+			}
+			else { return nullptr; }
+			break;
+		case 3:
+			if (this->ny > 0)
+			{
+				return AMR->cells[this->nx][this->ny - 1][this->nz];
+			}
+			else { return nullptr; }
+			break;
+		case 4:
+			if (this->nz < nn3 - 1)
+			{
+				return AMR->cells[this->nx][this->ny][this->nz + 1];
+			}
+			else { return nullptr; }
+			break;
+		case 5:
+			if (this->nz > 0)
+			{
+				return AMR->cells[this->nx][this->ny][this->nz - 1];
+			}
+			else { return nullptr; }
+			break;
+		default:
+			cout << "ERROR 874658767843659837459" << endl;
+			exit(-1);
 		}
 	}
 
@@ -94,7 +137,7 @@ AMR_cell* AMR_cell::get_sosed(AMR_f* AMR, short int nn)
 		}
 		else
 		{
-			return this->parent->get_sosed(AMR, nn);
+			return this->parent->get_sosed(AMR, nn); // Это не будет работать
 		}
 	}
 
@@ -104,9 +147,42 @@ AMR_cell* AMR_cell::get_sosed(AMR_f* AMR, short int nn)
 
 void AMR_cell::Print_info(void)
 {
-	cout << "level: " << this->level << endl;
-	cout << "nx: " << this->nx << endl;
-	cout << "ny: " << this->ny << endl;
-	cout << "nz: " << this->nz << endl;
-	cout << "_________________________________" <<  endl;
+	if (this->is_divided == false)
+	{
+		cout << "_________________________________" << endl;
+		cout << "level: " << this->level << endl;
+		cout << "is devided?: " << this->is_divided << endl;
+		cout << "nx: " << this->nx << endl;
+		cout << "ny: " << this->ny << endl;
+		cout << "nz: " << this->nz << endl;
+		cout << "_________________________________" << endl;
+	}
+	else
+	{
+		cout << "_________________________________" << endl;
+		cout << "level: " << this->level << endl;
+		cout << "is devided?: " << this->is_divided << endl;
+		cout << "nx: " << this->nx << endl;
+		cout << "ny: " << this->ny << endl;
+		cout << "nz: " << this->nz << endl;
+		cout << "_______Spusk_______" << endl;
+
+		const auto& shape = this->cells.shape();
+		const size_t nx = shape[0];
+		const size_t ny = shape[1];
+		const size_t nz = shape[2];
+		for (size_t i = 0; i < nx; ++i)
+		{
+			for (size_t j = 0; j < ny; ++j)
+			{
+				for (size_t k = 0; k < nz; ++k)
+				{
+					AMR_cell* cell = cells[i][j][k];
+					if (cell != nullptr) {
+						cell->Print_info();
+					}
+				}
+			}
+		}
+	}
 }

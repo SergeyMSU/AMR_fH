@@ -23,7 +23,7 @@ public:
 
 	AMR_cell* find_cell(const double& x, const double& y, const double& z, const double& xL, 
 		const double& xR, const double& yL, const double& yR, const double& zL, const double& zR);
-	// »щет €чейку по еЄ сосед€
+	// »щет €чейку по еЄ сосед€м
 
 	AMR_cell* get_sosed(AMR_f* AMR, short int nn);
 	// nn = 0, 1, 2, 3, 4, 5

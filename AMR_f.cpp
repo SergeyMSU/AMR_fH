@@ -63,9 +63,30 @@ AMR_cell* AMR_f::find_cell(const double& x, const double& y, const double& z)
 	else
 	{
 		return A->find_cell(x, y, z,
-			xL + index1 * dx, xR + (index1 + 1) * dx,
-			yL + index2 * dy, yR + (index2 + 1) * dy,
-			zL + index3 * dz, zR + (index3 + 1) * dz);
+			xL + index1 * dx, xL + (index1 + 1) * dx,
+			yL + index2 * dy, yL + (index2 + 1) * dy,
+			zL + index3 * dz, zL + (index3 + 1) * dz);
+	}
+}
+
+void AMR_f::Print_info(void)
+{
+	const auto& shape = this->cells.shape();
+	const size_t nx = shape[0];
+	const size_t ny = shape[1];
+	const size_t nz = shape[2];
+	for (size_t i = 0; i < nx; ++i) 
+	{
+		for (size_t j = 0; j < ny; ++j) 
+		{
+			for (size_t k = 0; k < nz; ++k) 
+			{
+				AMR_cell* cell = cells[i][j][k];
+				if (cell != nullptr) {
+					cell->Print_info();
+				}
+			}
+		}
 	}
 }
 

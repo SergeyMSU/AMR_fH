@@ -22,5 +22,7 @@ public:
 
 	AMR_cell* find_cell(const double& x, const double& y, const double& z);
 	// »щет €чейку (указатель на неЄ) по координате
+
+	void Print_info(void);
 };
 
