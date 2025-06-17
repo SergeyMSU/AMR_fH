@@ -31,5 +31,10 @@ public:
 
 	void Print_info(void);
 
+	void Get_index(std::vector<std::array<unsigned int, 3>>& numbers);
+	// Получить индекс ячейки
+
+	void Get_Center(AMR_f* AMR, std::array<double, 3>& center);
+
 };
 

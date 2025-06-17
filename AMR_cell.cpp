@@ -186,3 +186,62 @@ void AMR_cell::Print_info(void)
 		}
 	}
 }
+
+void AMR_cell::Get_index(std::vector<std::array<unsigned int, 3>>& numbers)
+{
+	//numbers.resize(this->level + 1);
+	numbers[this->level] = std::array<unsigned int, 3>{this->nx, this->ny, this->nz};
+	if (this->level == 0) return;
+
+	this->parent->Get_index(numbers);
+}
+
+void AMR_cell::Get_Center(AMR_f* AMR, std::array<double, 3>& center)
+{
+	std::vector<std::array<unsigned int, 3>> numbers;
+	numbers.resize(this->level + 1);
+	this->Get_index(numbers);
+
+	center[2] = center[1] = center[0] = 0.0;
+
+	unsigned int xn = AMR->xn;
+	unsigned int yn = AMR->yn;
+	unsigned int zn = AMR->zn;
+
+	double xL = AMR->xL;
+	double xR = AMR->xR;
+
+	double yL = AMR->yL;
+	double yR = AMR->yR;
+
+	double zL = AMR->zL;
+	double zR = AMR->zR;
+
+	for (auto& i : numbers)
+	{
+		double dx = (xR - xL) / xn;
+		double dy = (yR - yL) / yn;
+		double dz = (zR - zL) / zn;
+		xL = xL + i[0] * dx;
+		xR = xL + (i[0] + 1) * dx;
+	}
+
+	double dx = (xR - xL) / xn;
+	int index1 = static_cast<int>((x - xL) / dx);
+	if (index1 == xn) index1 = xn - 1;
+
+	double dy = (yR - yL) / yn;
+	int index2 = static_cast<int>((y - yL) / dy);
+	if (index2 == yn) index2 = yn - 1;
+
+	double dz = (zR - zL) / zn;
+	int index3 = static_cast<int>((z - zL) / dz);
+	if (index3 == zn) index3 = zn - 1;
+
+	xL + index1 * dx, xR + (index1 + 1) * dx,
+		yL + index2 * dy, yR + (index2 + 1) * dy,
+		zL + index3 * dz, zR + (index3 + 1) * dz)
+
+	for
+}
+
