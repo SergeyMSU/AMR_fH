@@ -7,6 +7,24 @@
 #include <vector>
 #include <array>
 
+#include <string>
+#include <sstream>
+#include <list>
+#include <unordered_set>
+#include <algorithm>
+#include <fstream>
+#include <map>
+#include <math.h>
+#include <cmath>
+#include <limits>
+#include <iterator>
+#include <cstdlib>
+#include <optional>
+#include <omp.h>
+#include <chrono>
+
+#define whach(x) cout << #x <<": " << (x) << endl
+
 class AMR_f;
 class AMR_cell;
 

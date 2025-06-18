@@ -23,6 +23,12 @@ public:
 	AMR_cell* find_cell(const double& x, const double& y, const double& z);
 	// »щет €чейку (указатель на неЄ) по координате
 
+	void Get_all_cells(vector< AMR_cell*>& cells); // ѕолучить список действительных €чеек (неразделЄнных)
+
+
 	void Print_info(void);
+
+	void Print_all_center_Tecplot(AMR_f* AMR);
+	void Print_all_sosed_Tecplot(AMR_f* AMR);
 };
 

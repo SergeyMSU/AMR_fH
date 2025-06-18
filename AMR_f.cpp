@@ -69,6 +69,31 @@ AMR_cell* AMR_f::find_cell(const double& x, const double& y, const double& z)
 	}
 }
 
+void AMR_f::Get_all_cells(vector<AMR_cell*>& cells)
+{
+	const auto& shape = this->cells.shape();
+	const size_t nx = shape[0];
+	const size_t ny = shape[1];
+	const size_t nz = shape[2];
+	for (size_t i = 0; i < nx; ++i)
+	{
+		for (size_t j = 0; j < ny; ++j)
+		{
+			for (size_t k = 0; k < nz; ++k)
+			{
+				AMR_cell* cell = this->cells[i][j][k];
+				if (cell->is_divided == false) {
+					cells.push_back(cell);
+				}
+				else
+				{
+					cell->Get_all_cells(cells);
+				}
+			}
+		}
+	}
+}
+
 void AMR_f::Print_info(void)
 {
 	const auto& shape = this->cells.shape();
@@ -88,5 +113,47 @@ void AMR_f::Print_info(void)
 			}
 		}
 	}
+}
+
+void AMR_f::Print_all_center_Tecplot(AMR_f* AMR)
+{
+	ofstream fout;
+	string name_f = "Tecplot_print_cell_center_3D.txt";
+	std::vector<std::array<double, 3>> centers;
+
+	fout.open(name_f);
+	fout << "TITLE = HP  VARIABLES = X, Y, Z" << endl;
+
+	const size_t dim1 = this->cells.shape()[0];
+	const size_t dim2 = this->cells.shape()[1];
+	const size_t dim3 = this->cells.shape()[2];
+
+	for (size_t i = 0; i < dim1; ++i) {
+		for (size_t j = 0; j < dim2; ++j) {
+			for (size_t k = 0; k < dim3; ++k) {
+				AMR_cell* cell = cells[i][j][k];
+				cell->Get_Centers(AMR, centers);
+			}
+		}
+	}
+
+	for (auto& i : centers)
+	{
+		fout << i[0] << " " << i[1] << " " <<  i[2] << endl;
+	}
+
+	fout.close();
+}
+
+void AMR_f::Print_all_sosed_Tecplot(AMR_f* AMR)
+{
+	ofstream fout;
+	string name_f = "Tecplot_print_sosed_3D.txt";
+
+	fout.open(name_f);
+	fout << "TITLE = HP  VARIABLES = X, Y, Z" << endl;
+
+
+	fout.close();
 }
 

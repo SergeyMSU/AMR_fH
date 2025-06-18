@@ -67,6 +67,14 @@ AMR_cell* AMR_cell::find_cell(const double& x, const double& y, const double& z,
 AMR_cell* AMR_cell::get_sosed(AMR_f* AMR, short int nn)
 {
 	// Нужно проверить, вдруг это основная ячейка, у которой нет родителя
+	std::vector<std::array<unsigned int, 3>> numbers;
+	numbers.resize(this->level + 1);
+	this->Get_index(numbers);
+
+	std::array<double, 3> center;
+	std::array<double, 3> razmer;
+	this->Get_Center(AMR, center, razmer);
+
 
 	auto nn1 = this->cells.shape()[0];
 	auto nn2 = this->cells.shape()[1];
@@ -217,31 +225,168 @@ void AMR_cell::Get_Center(AMR_f* AMR, std::array<double, 3>& center)
 	double zL = AMR->zL;
 	double zR = AMR->zR;
 
+	AMR_cell* cell = nullptr;
+	short int stk = 0;
+
 	for (auto& i : numbers)
 	{
+		stk++;
 		double dx = (xR - xL) / xn;
 		double dy = (yR - yL) / yn;
 		double dz = (zR - zL) / zn;
-		xL = xL + i[0] * dx;
 		xR = xL + (i[0] + 1) * dx;
+		xL = xL + i[0] * dx;
+		yR = yL + (i[1] + 1) * dy;
+		yL = yL + i[1] * dy;
+		zR = zL + (i[2] + 1) * dz;
+		zL = zL + i[2] * dz;
+		
+
+		if (stk == 1)
+		{
+			cell = AMR->cells[i[0]][i[1]][i[2]];
+		}
+		else
+		{
+			/*cout << "A " << endl;
+			whach(i[0]);
+			whach(i[1]);
+			whach(i[2]);
+			whach(xL);
+			whach(xR);
+			whach(dx);
+			whach(xn);*/
+			cell = cell->cells[i[0]][i[1]][i[2]];
+		}
+
+		if (cell->is_divided == true)
+		{
+			xn = cell->cells.shape()[0];
+			yn = cell->cells.shape()[1];
+			zn = cell->cells.shape()[2];
+		}
 	}
 
-	double dx = (xR - xL) / xn;
-	int index1 = static_cast<int>((x - xL) / dx);
-	if (index1 == xn) index1 = xn - 1;
+	center[0] = (xR + xL) / 2.0;
+	center[1] = (yR + yL) / 2.0;
+	center[2] = (zR + zL) / 2.0;
 
-	double dy = (yR - yL) / yn;
-	int index2 = static_cast<int>((y - yL) / dy);
-	if (index2 == yn) index2 = yn - 1;
+	return;
+}
 
-	double dz = (zR - zL) / zn;
-	int index3 = static_cast<int>((z - zL) / dz);
-	if (index3 == zn) index3 = zn - 1;
+void AMR_cell::Get_Center(AMR_f* AMR, std::array<double, 3>& center, std::array<double, 3>& razmer)
+{
+	std::vector<std::array<unsigned int, 3>> numbers;
+	numbers.resize(this->level + 1);
+	this->Get_index(numbers);
 
-	xL + index1 * dx, xR + (index1 + 1) * dx,
-		yL + index2 * dy, yR + (index2 + 1) * dy,
-		zL + index3 * dz, zR + (index3 + 1) * dz)
+	center[2] = center[1] = center[0] = 0.0;
 
-	for
+	unsigned int xn = AMR->xn;
+	unsigned int yn = AMR->yn;
+	unsigned int zn = AMR->zn;
+
+	double xL = AMR->xL;
+	double xR = AMR->xR;
+
+	double yL = AMR->yL;
+	double yR = AMR->yR;
+
+	double zL = AMR->zL;
+	double zR = AMR->zR;
+
+	AMR_cell* cell = nullptr;
+	short int stk = 0;
+
+	for (auto& i : numbers)
+	{
+		stk++;
+		double dx = (xR - xL) / xn;
+		double dy = (yR - yL) / yn;
+		double dz = (zR - zL) / zn;
+		xR = xL + (i[0] + 1) * dx;
+		xL = xL + i[0] * dx;
+		yR = yL + (i[1] + 1) * dy;
+		yL = yL + i[1] * dy;
+		zR = zL + (i[2] + 1) * dz;
+		zL = zL + i[2] * dz;
+
+
+		if (stk == 1)
+		{
+			cell = AMR->cells[i[0]][i[1]][i[2]];
+		}
+		else
+		{
+			cell = cell->cells[i[0]][i[1]][i[2]];
+		}
+
+		if (cell->is_divided == true)
+		{
+			xn = cell->cells.shape()[0];
+			yn = cell->cells.shape()[1];
+			zn = cell->cells.shape()[2];
+		}
+	}
+
+	center[0] = (xR + xL) / 2.0;
+	center[1] = (yR + yL) / 2.0;
+	center[2] = (zR + zL) / 2.0;
+
+	razmer[0] = xR - xL;
+	razmer[1] = yR - yL;
+	razmer[2] = zR - zL;
+
+	return;
+}
+
+void AMR_cell::Get_Centers(AMR_f* AMR, std::vector<std::array<double, 3>>& centers)
+{
+	if (this->is_divided == false)
+	{
+		std::array<double, 3> center;
+		this->Get_Center(AMR, center);
+		centers.push_back(center);
+	}
+	else
+	{
+		const size_t dim1 = this->cells.shape()[0];
+		const size_t dim2 = this->cells.shape()[1];
+		const size_t dim3 = this->cells.shape()[2];
+
+		for (size_t i = 0; i < dim1; ++i) {
+			for (size_t j = 0; j < dim2; ++j) {
+				for (size_t k = 0; k < dim3; ++k) {
+					AMR_cell* cell = cells[i][j][k];
+					cell->Get_Centers(AMR, centers);
+				}
+			}
+		}
+	}
+}
+
+void AMR_cell::Get_all_cells(vector<AMR_cell*>& cells)
+{
+	const auto& shape = this->cells.shape();
+	const size_t nx = shape[0];
+	const size_t ny = shape[1];
+	const size_t nz = shape[2];
+	for (size_t i = 0; i < nx; ++i)
+	{
+		for (size_t j = 0; j < ny; ++j)
+		{
+			for (size_t k = 0; k < nz; ++k)
+			{
+				AMR_cell* cell = this->cells[i][j][k];
+				if (cell->is_divided == false) {
+					cells.push_back(cell);
+				}
+				else
+				{
+					cell->Get_all_cells(cells);
+				}
+			}
+		}
+	}
 }
 
