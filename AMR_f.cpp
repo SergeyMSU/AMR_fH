@@ -145,6 +145,17 @@ void AMR_f::Print_all_center_Tecplot(AMR_f* AMR)
 	fout.close();
 }
 
+void AMR_f::Print_slice_Tecplot(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d)
+{
+	std::vector<AMR_cell*> all_cells;
+	this->Get_all_cells(all_cells);
+
+	for (auto& i : all_cells)
+	{
+
+	}
+}
+
 void AMR_f::Print_all_sosed_Tecplot(AMR_f* AMR)
 {
 	ofstream fout;
@@ -152,6 +163,34 @@ void AMR_f::Print_all_sosed_Tecplot(AMR_f* AMR)
 
 	fout.open(name_f);
 	fout << "TITLE = HP  VARIABLES = X, Y, Z" << endl;
+
+	vector< AMR_cell*> all_cells;
+	this->Get_all_cells(all_cells);
+
+	fout << "ZONE T=HP, N = " << all_cells.size() * 6 * 2 << ", E = " << all_cells.size() * 6 << ", F=FEPOINT, ET=LINESEG" << endl;
+
+	for (auto& cc : all_cells)
+	{
+		std::array<double, 3> center;
+		cc->Get_Center(AMR, center);
+		for (size_t ii = 0; ii < 6; ii++)
+		{
+			auto ss = cc->get_sosed(AMR, ii);
+			if (ss == nullptr) ss = cc;
+
+			std::array<double, 3> center2;
+			ss->Get_Center(AMR, center2);
+
+			fout << center[0] << " " << center[1] << " " << center[2] << endl;
+			fout << (center[0] + center2[0]) / 2.0 << " " << (center[1] + center2[1]) / 2.0
+				<< " " << (center[2] + center2[2]) / 2.0 << endl;
+		}
+	}
+
+	for (int m = 0; m < all_cells.size() * 6; m++)
+	{
+		fout << 2 * m + 1 << " " << 2 * m + 2 << endl;
+	}
 
 
 	fout.close();

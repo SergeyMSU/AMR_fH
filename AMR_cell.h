@@ -38,6 +38,9 @@ public:
 	void Get_Center(AMR_f* AMR, std::array<double, 3>& center, std::array<double, 3>& razmer); // Получить центр ячейки (даже если она разбита)
 
 	void Get_Centers(AMR_f* AMR, std::vector<std::array<double, 3>>& centers); // Получить центры ячейки (включая центра подъечеек)
-	void Get_all_cells(vector< AMR_cell*>& cells); // Получить список действительных ячеек (неразделённых)
+	void Get_all_cells(std::vector< AMR_cell*>& cells); // Получить список действительных ячеек (неразделённых)
+
+	void Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector<std::array<double, 3>>& poins);
+	// Разрезать ячейку плоскостью
 };
 

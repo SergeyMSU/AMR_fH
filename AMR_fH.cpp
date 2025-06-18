@@ -1,5 +1,4 @@
-﻿#include <iostream>
-#include "header.h"
+﻿#include "header.h"
 
 int main()
 {
@@ -23,4 +22,5 @@ int main()
     Print(numbers);
 
     S->Print_all_center_Tecplot(S);
+    S->Print_all_sosed_Tecplot(S);
 }

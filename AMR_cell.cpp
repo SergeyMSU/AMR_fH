@@ -1,4 +1,4 @@
-#include "AMR_cell.h"
+п»ї#include "AMR_cell.h"
 
 AMR_cell::AMR_cell()
 {
@@ -23,7 +23,7 @@ void AMR_cell::divide(unsigned short int n1, unsigned short int n2, unsigned sho
 				this->cells[i][j][k] = A;
 				A->I_self = A;
 
-				A->f = this->f;                        //  Просто сносим значение
+				A->f = this->f;                        //  РџСЂРѕСЃС‚Рѕ СЃРЅРѕСЃРёРј Р·РЅР°С‡РµРЅРёРµ
 			}
 		}
 	}
@@ -66,89 +66,34 @@ AMR_cell* AMR_cell::find_cell(const double& x, const double& y, const double& z,
 
 AMR_cell* AMR_cell::get_sosed(AMR_f* AMR, short int nn)
 {
-	// Нужно проверить, вдруг это основная ячейка, у которой нет родителя
-	std::vector<std::array<unsigned int, 3>> numbers;
-	numbers.resize(this->level + 1);
-	this->Get_index(numbers);
-
 	std::array<double, 3> center;
 	std::array<double, 3> razmer;
 	this->Get_Center(AMR, center, razmer);
 
 
-	auto nn1 = this->cells.shape()[0];
-	auto nn2 = this->cells.shape()[1];
-	auto nn3 = this->cells.shape()[2];
-	
-	if (this->level == 0)
-	{
-		switch (nn) {
-		case 0:
-			if (this->nx < nn1 - 1)
-			{
-				return AMR->cells[this->nx + 1][this->ny][this->nz];
-			}
-			else { return nullptr; }
-			break;
-		case 1:
-			if (this->nx > 0)
-			{
-				return AMR->cells[this->nx - 1][this->ny][this->nz];
-			}
-			else { return nullptr; }
-			break;
-		case 2:
-			if (this->ny < nn2 - 1)
-			{
-				return AMR->cells[this->nx][this->ny + 1][this->nz];
-			}
-			else { return nullptr; }
-			break;
-		case 3:
-			if (this->ny > 0)
-			{
-				return AMR->cells[this->nx][this->ny - 1][this->nz];
-			}
-			else { return nullptr; }
-			break;
-		case 4:
-			if (this->nz < nn3 - 1)
-			{
-				return AMR->cells[this->nx][this->ny][this->nz + 1];
-			}
-			else { return nullptr; }
-			break;
-		case 5:
-			if (this->nz > 0)
-			{
-				return AMR->cells[this->nx][this->ny][this->nz - 1];
-			}
-			else { return nullptr; }
-			break;
-		default:
-			cout << "ERROR 874658767843659837459" << endl;
-			exit(-1);
-		}
+	switch (nn) {
+	case 0:
+		return AMR->find_cell(center[0] + razmer[0] / 2.0 + razmer[0] / 1000.0, center[1], center[2]);
+		break;
+	case 1:
+		return AMR->find_cell(center[0] - razmer[0] / 2.0 - razmer[0] / 1000.0, center[1], center[2]);
+		break;
+	case 2:
+		return AMR->find_cell(center[0], center[1] + razmer[1] / 2.0 + razmer[1] / 1000.0, center[2]);
+		break;
+	case 3:
+		return AMR->find_cell(center[0], center[1] - razmer[1] / 2.0 - razmer[1] / 1000.0, center[2]);
+		break;
+	case 4:
+		return AMR->find_cell(center[0], center[1], center[2] + razmer[2] / 2.0 + razmer[2] / 1000.0);
+		break;
+	case 5:
+		return AMR->find_cell(center[0], center[1], center[2] - razmer[2] / 2.0 - razmer[2] / 1000.0);
+		break;
+	default:
+		cout << "ERROR 874658767843659837459" << endl;
+		exit(-1);
 	}
-
-
-	// Ищем соседа слева
-	if (nn == 0)
-	{
-
-	}
-	else if (nn == 1)
-	{
-		if (this->nx > 0)
-		{
-			return this->parent->cells[this->nx - 1][this->ny][this->nz];
-		}
-		else
-		{
-			return this->parent->get_sosed(AMR, nn); // Это не будет работать
-		}
-	}
-
 
 	return nullptr;
 }
@@ -388,5 +333,124 @@ void AMR_cell::Get_all_cells(vector<AMR_cell*>& cells)
 			}
 		}
 	}
+}
+
+bool findIntersection(const std::array<double, 3>& P1, const std::array<double, 3>& P2,
+	const double& a, const double& b, const double& c, const double& d,
+	std::array<double, 3>& outIntersection) 
+{
+	double D = a * P1[0] + b * P1[1] + c * P1[2] + d;
+	double N = a * (P2[0] - P1[0]) + b * (P2[1] - P1[1]) + c * (P2[2] - P1[2]);
+
+	// РћС‚СЂРµР·РѕРє РїР°СЂР°Р»Р»РµР»РµРЅ РїР»РѕСЃРєРѕСЃС‚Рё
+	if (std::abs(N) < 1e-10) 
+	{
+		if (std::abs(D) < 1e-10) 
+		{
+			// РћС‚СЂРµР·РѕРє Р»РµР¶РёС‚ РІ РїР»РѕСЃРєРѕСЃС‚Рё (Р±РµСЃРєРѕРЅРµС‡РЅРѕ РјРЅРѕРіРѕ РїРµСЂРµСЃРµС‡РµРЅРёР№)
+			// РњРѕР¶РЅРѕ РІРµСЂРЅСѓС‚СЊ, РЅР°РїСЂРёРјРµСЂ, P1 РёР»Рё P2
+			outIntersection = P1;
+			return true;
+		}
+		else 
+		{
+			// РќРµС‚ РїРµСЂРµСЃРµС‡РµРЅРёСЏ
+			return false;
+		}
+	}
+
+	double t = -D / N;
+
+	// РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ t в€€ [0, 1]
+	if (t >= 0.0 && t <= 1.0) 
+	{
+		outIntersection[0] = P1[0] + t * (P2[0] - P1[0]);
+		outIntersection[1] = P1[1] + t * (P2[1] - P1[1]);
+		outIntersection[2] = P1[2] + t * (P2[2] - P1[2]);
+		return true;
+	}
+	else 
+	{
+		// РџРµСЂРµСЃРµС‡РµРЅРёРµ Р·Р° РїСЂРµРґРµР»Р°РјРё РѕС‚СЂРµР·РєР°
+		return false;
+	}
+}
+
+void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector<std::array<double, 3>>& poins)
+{
+	std::vector< std::array<double, 3> > all_point;
+	std::vector< std::array<double, 3> > kyb_point;
+	std::array<double, 3> P1;
+	std::array<double, 3> P2;
+	std::array<double, 3> outIntersection;
+
+	std::array<double, 3> center;
+	std::array<double, 3> razmer;
+	this->Get_Center(AMR, center, razmer);
+
+	bool aa;
+
+	P1[0] = center[0] - razmer[0] / 2.0;
+	P1[1] = center[1] - razmer[1] / 2.0;
+	P1[2] = center[2] - razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	P1[0] = center[0] + razmer[0] / 2.0;
+	P1[1] = center[1] - razmer[1] / 2.0;
+	P1[2] = center[2] - razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	P1[0] = center[0] + razmer[0] / 2.0;
+	P1[1] = center[1] + razmer[1] / 2.0;
+	P1[2] = center[2] - razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	P1[0] = center[0] - razmer[0] / 2.0;
+	P1[1] = center[1] + razmer[1] / 2.0;
+	P1[2] = center[2] - razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	// ----------------------
+
+	P1[0] = center[0] - razmer[0] / 2.0;
+	P1[1] = center[1] - razmer[1] / 2.0;
+	P1[2] = center[2] + razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	P1[0] = center[0] + razmer[0] / 2.0;
+	P1[1] = center[1] - razmer[1] / 2.0;
+	P1[2] = center[2] + razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	P1[0] = center[0] + razmer[0] / 2.0;
+	P1[1] = center[1] + razmer[1] / 2.0;
+	P1[2] = center[2] + razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	P1[0] = center[0] - razmer[0] / 2.0;
+	P1[1] = center[1] + razmer[1] / 2.0;
+	P1[2] = center[2] + razmer[2] / 2.0;
+	kyb_point.push_back(P1);
+
+	for (size_t i = 0; i < 8; i++)
+	{
+		for (size_t j = i + 1; j < 8; j++)
+		{
+			P1 = kyb_point[i];
+			P2 = kyb_point[j];
+
+			int kkk = 0;
+
+			if (fabs(P1[0] - P2[0]) < 0.00000001) kkk++;
+			if (fabs(P1[1] - P2[1]) < 0.00000001) kkk++;
+			if (fabs(P1[2] - P2[2]) < 0.00000001) kkk++;
+
+			if (kkk != 2) continue;
+
+			aa = findIntersection(P1, P2, a, b, c, d, outIntersection);
+			if (aa == true) all_point.push_back(outIntersection);
+		}
+	}
+
 }
 
