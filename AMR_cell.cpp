@@ -452,5 +452,85 @@ void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const d
 		}
 	}
 
+	// std::vector< std::array<double, 3> > all_point;
+	// Сейчас тут хранятся все найденные точки, которые надо рассортировать по кругу
+
+	if (all_point.size() < 3 || all_point.size() > 6)
+	{
+		cout << "Error 9867531090" << endl;
+		exit(-1);
+	}
+
+	// Находим нормаль к плоскости
+
+	std::array<double, 3> normal;
+	normal[0] = a;
+	normal[1] = b;
+	normal[2] = c;
+
+	double length = std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+	if (length > 0) 
+	{
+		normal[0] /= length;
+		normal[1] /= length;
+		normal[2] /= length;
+	}
+
+	std::array<double, 3> centroid = { 0.0, 0.0, 0.0 };
+	for (const auto& p : all_point) {
+		centroid[0] += p[0];
+		centroid[1] += p[1];
+		centroid[2] += p[2];
+	}
+	centroid[0] /= all_point.size();
+	centroid[1] /= all_point.size();
+	centroid[2] /= all_point.size();
+
+	// Выбираем произвольное направление для сортировки (например, ось OX в плоскости)
+	std::array<double, 3> reference_dir;
+	if (std::abs(normal[0]) > 0.9) 
+	{ // Если нормаль близка к OX, выбираем OY
+		reference_dir = { 0.0, 1.0, 0.0 };
+	}
+	else 
+	{
+		reference_dir = { 1.0, 0.0, 0.0 };
+	}
+
+	// Находим вектор в плоскости, перпендикулярный нормали
+	std::array<double, 3>  tangent_dir = {
+		reference_dir[1] * normal[2] - reference_dir[2] * normal[1],
+		reference_dir[2] * normal[0] - reference_dir[0] * normal[2],
+		reference_dir[0] * normal[1] - reference_dir[1] * normal[0]
+	};
+
+	// Сортируем точки по углу относительно tangent_dir
+	std::sort(all_point.begin(), all_point.end(), [centroid, &tangent_dir]
+	(std::array<double, 3> aa, std::array<double, 3> bb) 
+	{
+		std::array<double, 3> vec_a = { aa[0] - centroid[0], aa[1] - centroid[1], aa[2] - centroid[2] };
+		std::array<double, 3> vec_b = { bb[0] - centroid[0], bb[1] - centroid[1], bb[2] - centroid[2] };;
+
+		// Угол между vec_a и tangent_dir
+		double dot_a = vec_a[0] * tangent_dir[0] + vec_a[1] * tangent_dir[1] + vec_a[2] * tangent_dir[2];
+		double cross_a =
+			tangent_dir[1] * vec_a[2] - tangent_dir[2] * vec_a[1] -
+			tangent_dir[0] * vec_a[2] + tangent_dir[2] * vec_a[0] +
+			tangent_dir[0] * vec_a[1] - tangent_dir[1] * vec_a[0];
+
+		double angle_a = std::atan2(cross_a, dot_a);
+
+		// Угол между vec_b и tangent_dir
+		double dot_b = vec_b[0] * tangent_dir[0] + vec_b[1] * tangent_dir[1] + vec_b[2] * tangent_dir[2];
+		double cross_b =
+			tangent_dir[1] * vec_b[2] - tangent_dir[2] * vec_b[1] -
+			tangent_dir[0] * vec_b[2] + tangent_dir[2] * vec_b[0] +
+			tangent_dir[0] * vec_b[1] - tangent_dir[1] * vec_b[0];
+
+		double angle_b = std::atan2(cross_b, dot_b);
+
+		return angle_a < angle_b;
+	});
+
 }
 
