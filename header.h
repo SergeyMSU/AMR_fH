@@ -2,13 +2,17 @@
 
 // Boost библиотека (надо подключать к компилятору отдельно)
 #include "boost/multi_array.hpp"
-#include <boost/parameter.hpp>
+//#include <boost/parameter.hpp>
+#include <Eigen/Dense>
 #include <iostream>
 #include <vector>
 #include <array>
 
+
 #include <string>
 #include <sstream>
+#include <iostream>
+#include <vector>
 #include <list>
 #include <unordered_set>
 #include <algorithm>

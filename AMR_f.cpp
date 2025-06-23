@@ -149,11 +149,56 @@ void AMR_f::Print_slice_Tecplot(AMR_f* AMR, const double& a, const double& b, co
 {
 	std::vector<AMR_cell*> all_cells;
 	this->Get_all_cells(all_cells);
+	std::vector < std::vector<std::array<double, 3>>> points;
 
 	for (auto& i : all_cells)
 	{
-
+		i->Slice_plane(AMR, a, b, c, d, points);
 	}
+
+	unsigned int NN2 = 0;
+
+	for (const auto& i : points)
+	{
+		NN2 += i.size();
+	}
+
+	ofstream fout;
+	string name_f = "Tecplot_setka_srez.txt";
+
+	fout.open(name_f);
+	fout << "TITLE = HP" << endl;
+	fout << "VARIABLES = X, Y, Z" << endl;
+	fout << "ZONE T=HP, NODES = " << NN2 << ", ELEMENTS = " << NN2 << ", F = FEPOINT, ET = LINESEG" << endl;
+
+	Eigen::Vector3d C;
+	for (const auto& i : points)
+	{
+		for (const auto& j : i)
+		{
+			C(0) = j[0];
+			C(1) = j[1];
+			C(2) = j[2];
+			fout << C(0) << " " << C(1) << " " << C(2) << endl;
+		}
+	}
+
+
+	size_t all_k1 = 1;
+	for (const auto& i : points)
+	{
+		size_t k1 = i.size();
+		for (size_t ii = 0; ii < k1; ii++)
+		{
+			size_t k2 = ii + 1;
+			if (k2 >= k1) k2 = 0;
+			fout << all_k1 + ii << " " << all_k1 + k2 << endl;
+		}
+
+		all_k1 = all_k1 + k1;
+	}
+
+	fout.close();
 }
 
 void AMR_f::Print_all_sosed_Tecplot(AMR_f* AMR)

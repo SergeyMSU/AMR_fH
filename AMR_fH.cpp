@@ -11,16 +11,19 @@ int main()
     A = S->find_cell(0.0, 0.0, 0.0);
     A->divide(5, 5, 1);
 
-    std::vector<std::array<unsigned int, 3>> numbers;
-    numbers.resize(A->level + 1);
-    A->Get_index(numbers);
+    //std::vector<std::array<unsigned int, 3>> numbers;
+    //numbers.resize(A->level + 1);
+    //A->Get_index(numbers);
+
+    A = S->find_cell(-0.066, 0.0, 0.0);
 
     std::array<double, 3> center;
     A->Get_Center(S, center);
     cout << "center = " << center[0] << " " << center[1] << " " << center[2] << endl;
-
-    Print(numbers);
+    //Print(numbers);
 
     S->Print_all_center_Tecplot(S);
     S->Print_all_sosed_Tecplot(S);
+
+    S->Print_slice_Tecplot(S, 0.0, 0.0, 1.0, 0.0);
 }

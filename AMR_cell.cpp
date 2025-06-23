@@ -73,22 +73,28 @@ AMR_cell* AMR_cell::get_sosed(AMR_f* AMR, short int nn)
 
 	switch (nn) {
 	case 0:
-		return AMR->find_cell(center[0] + razmer[0] / 2.0 + razmer[0] / 1000.0, center[1], center[2]);
+		return AMR->find_cell(center[0] + razmer[0] / 2.0 + razmer[0] / 1000.0,
+			center[1], center[2]);
 		break;
 	case 1:
-		return AMR->find_cell(center[0] - razmer[0] / 2.0 - razmer[0] / 1000.0, center[1], center[2]);
+		return AMR->find_cell(center[0] - razmer[0] / 2.0 - razmer[0] / 1000.0,
+			center[1], center[2]);
 		break;
 	case 2:
-		return AMR->find_cell(center[0], center[1] + razmer[1] / 2.0 + razmer[1] / 1000.0, center[2]);
+		return AMR->find_cell(center[0], 
+			center[1] + razmer[1] / 2.0 + razmer[1] / 1000.0, center[2]);
 		break;
 	case 3:
-		return AMR->find_cell(center[0], center[1] - razmer[1] / 2.0 - razmer[1] / 1000.0, center[2]);
+		return AMR->find_cell(center[0], 
+			center[1] - razmer[1] / 2.0 - razmer[1] / 1000.0, center[2]);
 		break;
 	case 4:
-		return AMR->find_cell(center[0], center[1], center[2] + razmer[2] / 2.0 + razmer[2] / 1000.0);
+		return AMR->find_cell(center[0], center[1], 
+			center[2] + razmer[2] / 2.0 + razmer[2] / 1000.0);
 		break;
 	case 5:
-		return AMR->find_cell(center[0], center[1], center[2] - razmer[2] / 2.0 - razmer[2] / 1000.0);
+		return AMR->find_cell(center[0], center[1], 
+			center[2] - razmer[2] / 2.0 - razmer[2] / 1000.0);
 		break;
 	default:
 		cout << "ERROR 874658767843659837459" << endl;
@@ -376,7 +382,7 @@ bool findIntersection(const std::array<double, 3>& P1, const std::array<double, 
 	}
 }
 
-void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector<std::array<double, 3>>& poins)
+void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector < std::vector<std::array<double, 3>>>& points)
 {
 	std::vector< std::array<double, 3> > all_point;
 	std::vector< std::array<double, 3> > kyb_point;
@@ -455,10 +461,9 @@ void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const d
 	// std::vector< std::array<double, 3> > all_point;
 	// Сейчас тут хранятся все найденные точки, которые надо рассортировать по кругу
 
-	if (all_point.size() < 3 || all_point.size() > 6)
+	if (all_point.size() < 3)
 	{
-		cout << "Error 9867531090" << endl;
-		exit(-1);
+		return;
 	}
 
 	// Находим нормаль к плоскости
@@ -532,5 +537,8 @@ void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const d
 		return angle_a < angle_b;
 	});
 
+
+	points.push_back(all_point);
+	return;
 }
 

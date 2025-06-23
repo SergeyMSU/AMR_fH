@@ -1,5 +1,5 @@
 #pragma once
-#include "Header.h"
+#include "header.h"
 
 class AMR_cell
 {
@@ -40,7 +40,7 @@ public:
 	void Get_Centers(AMR_f* AMR, std::vector<std::array<double, 3>>& centers); // Получить центры ячейки (включая центра подъечеек)
 	void Get_all_cells(std::vector< AMR_cell*>& cells); // Получить список действительных ячеек (неразделённых)
 
-	void Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector<std::array<double, 3>>& poins);
+	void Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector < std::vector<std::array<double, 3>>>& points);
 	// Разрезать ячейку плоскостью
 };
 
