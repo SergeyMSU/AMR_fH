@@ -58,9 +58,9 @@ AMR_cell* AMR_cell::find_cell(const double& x, const double& y, const double& z,
 	else
 	{
 		return A->find_cell(x, y, z,
-			xL + index1 * dx, xR + (index1 + 1) * dx,
-			yL + index2 * dy, yR + (index2 + 1) * dy,
-			zL + index3 * dz, zR + (index3 + 1) * dz);
+			xL + index1 * dx, xL + (index1 + 1) * dx,
+			yL + index2 * dy, yL + (index2 + 1) * dy,
+			zL + index3 * dz, zL + (index3 + 1) * dz);
 	}
 }
 
