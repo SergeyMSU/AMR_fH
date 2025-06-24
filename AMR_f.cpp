@@ -94,6 +94,168 @@ void AMR_f::Get_all_cells(vector<AMR_cell*>& cells)
 	}
 }
 
+double maxwell(const double& cp, const double& u1,
+	const double& u2, const double& u3,
+	const double& x, const double& y, const double& z)
+{
+	return pow((sqrt(const_pi) * cp), -3) * exp(-kv(x - u1) / kv(cp)
+		- kv(y - u2) / kv(cp) - kv(z - u3) / kv(cp));
+}
+
+void AMR_f::Fill_test(void)
+{
+	std::vector<AMR_cell*> cells;
+	this->Get_all_cells(cells);
+	std::array<double, 3> center;
+	std::array<double, 3> razmer;
+
+	double cp1 = 0.2;
+	double cp2 = 0.8;
+	double u1 = -0.3;
+	double u2 = +0.5;
+
+	for (auto& i : cells)
+	{
+		i->Get_Center(this->AMR_self, center, razmer);
+		double a, b, c, d, e, f;
+		a = center[0] - razmer[0]/2;
+		b = center[0] + razmer[0]/2;
+		c = center[1] - razmer[1]/2;
+		d = center[1] + razmer[1]/2;
+		e = center[2] - razmer[2] / 2;
+		f = center[2] + razmer[2] / 2;
+		double s1 = maxwell(cp1, u1, 0.0, 0.0, a, c, e) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, a, c, e);
+		double s2 = maxwell(cp1, u1, 0.0, 0.0, a, c, f) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, a, c, f);
+		double s3 = maxwell(cp1, u1, 0.0, 0.0, a, d, e) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, a, d, e);
+		double s4 = maxwell(cp1, u1, 0.0, 0.0, a, d, f) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, a, d, f);
+		double s5 = maxwell(cp1, u1, 0.0, 0.0, b, c, e) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, b, c, e);
+		double s6 = maxwell(cp1, u1, 0.0, 0.0, b, c, f) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, b, c, f);
+		double s7 = maxwell(cp1, u1, 0.0, 0.0, b, d, e) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, b, d, e);
+		double s8 = maxwell(cp1, u1, 0.0, 0.0, b, d, f) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, b, d, f);
+		double s9 = maxwell(cp1, u1, 0.0, 0.0, (a + b)/2, (c + d)/2, (e + f)/2) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, (a + b) / 2, (c + d) / 2, (e + f) / 2);
+
+		i->f = s9;
+	}
+}
+
+void AMR_f::Refine(void)
+{
+	this->Sf = 0.0;
+	this->Sfu = 0.0;
+	this->Sfuu = 0.0;
+
+	std::vector<AMR_cell*> cells;
+	std::array<double, 3> center;
+	std::array<double, 3> razmer;
+
+	this->Get_all_cells(cells);
+	double V, u, m, mu, muu;
+
+	cout << "All_cells_do = " << cells.size() << endl;
+
+	for (const auto& i : cells)
+	{
+		i->Get_Center(this->AMR_self, center, razmer);
+		V = razmer[0] * razmer[1] * razmer[2];
+		u = norm2(center[0], center[1], center[2]);
+		this->Sf += V * i->f;
+		this->Sfu += V * i->f * u;
+		this->Sfuu += V * i->f * kv(u);
+	}
+
+	double procent = 0.5;
+	for (const auto& i : cells)
+	{
+		i->is_signif = false;
+		i->Get_Center(this->AMR_self, center, razmer);
+		V = razmer[0] * razmer[1] * razmer[2];
+		u = norm2(center[0], center[1], center[2]);
+		m = V * i->f;
+		mu = V * i->f * u;
+		muu = V * i->f * kv(u);
+
+		if (m * 100.0 / this->Sf > procent) i->is_signif = true;
+		if (mu * 100.0 / this->Sfu > procent) i->is_signif = true;
+		if (muu * 100.0 / this->Sfuu > procent) i->is_signif = true;
+	}
+
+	procent = 2.0;
+	for (const auto& i : cells)
+	{
+		i->need_devide_x = false;
+		i->need_devide_y = false;
+		i->need_devide_z = false;
+
+		if (i->is_signif == false) continue;
+
+		auto A = i->get_sosed(this->AMR_self, 0);
+		if(A != nullptr) if (fabs(i->f - A->f) * 100.0 / i->f > procent) i->need_devide_x = true;
+		A = i->get_sosed(this->AMR_self, 1);
+		if (A != nullptr) if (fabs(i->f - A->f) * 100.0 / i->f > procent) i->need_devide_x = true;
+		
+
+		A = i->get_sosed(this->AMR_self, 2);
+		if (A != nullptr) if (fabs(i->f - A->f) * 100.0 / i->f > procent) i->need_devide_y = true;
+		A = i->get_sosed(this->AMR_self, 3);
+		if (A != nullptr) if (fabs(i->f - A->f) * 100.0 / i->f > procent) i->need_devide_y = true;
+
+		A = i->get_sosed(this->AMR_self, 4);
+		if (A != nullptr) if (fabs(i->f - A->f) * 100.0 / i->f > procent) i->need_devide_z = true;
+		A = i->get_sosed(this->AMR_self, 5);
+		if (A != nullptr) if (fabs(i->f - A->f) * 100.0 / i->f > procent) i->need_devide_z = true;
+	}
+
+	short int k1 = 1;
+	short int k2 = 1;
+	short int k3 = 1;
+	unsigned int NN = 0;
+	for (const auto& i : cells)
+	{
+		if (i->need_devide_x == true)
+		{
+			k1 = 2;
+		}
+		else
+		{
+			k1 = 1;
+		}
+
+		if (i->need_devide_y == true)
+		{
+			k2 = 2;
+		}
+		else
+		{
+			k2 = 1;
+		}
+
+		if (i->need_devide_z == true)
+		{
+			k3 = 2;
+		}
+		else
+		{
+			k3 = 1;
+		}
+
+		if (k1 == 1 && k2 == 1 && k3 == 1) continue;
+
+		i->divide(k1, k2, k3);
+		NN++;
+	}
+
+	cout << "Devide " << NN << "  cells" << endl;
+}
+
 void AMR_f::Print_info(void)
 {
 	const auto& shape = this->cells.shape();
@@ -119,12 +281,16 @@ void AMR_f::Print_all_center_Tecplot(AMR_f* AMR)
 {
 	ofstream fout;
 	string name_f = "Tecplot_print_cell_center_3D.txt";
-	std::vector<std::array<double, 3>> centers;
+	//std::vector<std::array<double, 3>> centers;
+	std::array<double, 3> center;
+	std::vector< AMR_cell*> cells;
 
 	fout.open(name_f);
-	fout << "TITLE = HP  VARIABLES = X, Y, Z" << endl;
+	fout << "TITLE = HP  VARIABLES = X, Y, Z, f" << endl;
 
-	const size_t dim1 = this->cells.shape()[0];
+	this->Get_all_cells(cells);
+
+	/*const size_t dim1 = this->cells.shape()[0];
 	const size_t dim2 = this->cells.shape()[1];
 	const size_t dim3 = this->cells.shape()[2];
 
@@ -135,11 +301,12 @@ void AMR_f::Print_all_center_Tecplot(AMR_f* AMR)
 				cell->Get_Centers(AMR, centers);
 			}
 		}
-	}
+	}*/
 
-	for (auto& i : centers)
+	for (auto& j : cells)
 	{
-		fout << i[0] << " " << i[1] << " " <<  i[2] << endl;
+		j->Get_Center(this->AMR_self, center);
+		fout << center[0] << " " << center[1] << " " << center[2] << " " << j->f << endl;
 	}
 
 	fout.close();
@@ -239,5 +406,41 @@ void AMR_f::Print_all_sosed_Tecplot(AMR_f* AMR)
 
 
 	fout.close();
+}
+
+void AMR_f::Print_1D_Tecplot(AMR_f* AMR)
+{
+	ofstream fout;
+	string name_f = "Tecplot_Print_1D_Tecplot.txt";
+
+	fout.open(name_f);
+	fout << "TITLE = HP  VARIABLES = X, f, ff" << endl;
+
+	double x = -20;
+	double dx = 0.03;
+
+	double cp1 = 0.2;
+	double cp2 = 0.8;
+	double u1 = -0.3;
+	double u2 = +0.5;
+
+	while (x < 20.0)
+	{
+		x = x + dx;
+		auto A = this->find_cell(x, 0.0, 0.0);
+		double ff = maxwell(cp1, u1, 0.0, 0.0, x, 0.0, 0.0) +
+			10 * maxwell(cp2, u2, 0.0, 0.0, x, 0.0, 0.0);
+		if (A == nullptr)
+		{
+			fout << x << " " << 0.0 << " " << ff << endl;
+		}
+		else
+		{
+			fout << x << " " << A->f << " " << ff << endl;
+		}
+	}
+
+	fout.close();
+
 }
 

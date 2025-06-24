@@ -14,8 +14,15 @@ public:
 	unsigned int ny = 0;
 	unsigned int nz = 0;
 
-	bool is_divided = false;
+	bool is_divided = false;      // Разделена ли ячейка
 	boost::multi_array<AMR_cell*, 3> cells;  // Ячейки - дети
+
+	bool is_signif = false;  // Сущестывенная ячейка, та, которую можно делить, если надо 
+	// определяется по процентру плотности к всему объёму
+
+	bool need_devide_x = false;   // Нужно ли её делить вдоль x?
+	bool need_devide_y = false;   // Нужно ли её делить вдоль y?
+	bool need_devide_z = false;   // Нужно ли её делить вдоль z?
 
 	AMR_cell();
 
@@ -37,7 +44,7 @@ public:
 	void Get_Center(AMR_f* AMR, std::array<double, 3>& center); // Получить центр ячейки (даже если она разбита)
 	void Get_Center(AMR_f* AMR, std::array<double, 3>& center, std::array<double, 3>& razmer); // Получить центр ячейки (даже если она разбита)
 
-	void Get_Centers(AMR_f* AMR, std::vector<std::array<double, 3>>& centers); // Получить центры ячейки (включая центра подъечеек)
+	void Get_Centers(AMR_f* AMR, std::vector<std::array<double, 3>>& centers); // Получить центры ячейки (включая центры подъечеек)
 	void Get_all_cells(std::vector< AMR_cell*>& cells); // Получить список действительных ячеек (неразделённых)
 
 	void Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector < std::vector<std::array<double, 3>>>& points);
