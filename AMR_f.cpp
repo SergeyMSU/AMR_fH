@@ -17,6 +17,10 @@ AMR_f::AMR_f(const double& xL, const double& xR, const double& yL, const double&
 	this->yn = yn;
 	this->zn = zn;
 
+	this->Vn = { 0.0, 0.0, 0.0 };
+	this->Vt = { 0.0, 0.0, 0.0 };
+	this->Vm = { 0.0, 0.0, 0.0 };
+
 
 	this->cells.resize(boost::extents[xn][yn][zn]);
 
@@ -254,6 +258,97 @@ void AMR_f::Refine(void)
 	}
 
 	cout << "Devide " << NN << "  cells" << endl;
+}
+
+void AMR_f::Save(string namef)
+{
+	std::ofstream out(namef, std::ios::binary);
+	if (!out) {
+		throw std::runtime_error("Cannot open file for writing: " + namef);
+	}
+
+	// Сохраняем важные параметры сетки
+	double a;
+	a = this->xL;
+	out.write(reinterpret_cast<const char*>(&a), sizeof(double));
+	a = this->xR;
+	out.write(reinterpret_cast<const char*>(&a), sizeof(double));
+	a = this->yL;
+	out.write(reinterpret_cast<const char*>(&a), sizeof(double));
+	a = this->yR;
+	out.write(reinterpret_cast<const char*>(&a), sizeof(double));
+	a = this->zL;
+	out.write(reinterpret_cast<const char*>(&a), sizeof(double));
+	a = this->zR;
+	out.write(reinterpret_cast<const char*>(&a), sizeof(double));
+
+	out.write(reinterpret_cast<const char*>(this->Vn.data()), 3 * sizeof(double));
+	out.write(reinterpret_cast<const char*>(this->Vt.data()), 3 * sizeof(double));
+	out.write(reinterpret_cast<const char*>(this->Vm.data()), 3 * sizeof(double));
+
+
+	// Сохраняем размеры основной сетки
+	size_t dims[3] = { this->cells.shape()[0], this->cells.shape()[1], this->cells.shape()[2] };
+	out.write(reinterpret_cast<const char*>(dims), 3 * sizeof(size_t));
+
+	// Записываем все ячейки
+	for (size_t i = 0; i < dims[0]; ++i) 
+	{
+		for (size_t j = 0; j < dims[1]; ++j) 
+		{
+			for (size_t k = 0; k < dims[2]; ++k) 
+			{
+				this->cells[i][j][k]->Save_cell(out);
+			}
+		}
+	}
+
+}
+
+void AMR_f::Read(string namef)
+{
+	std::ifstream in(namef, std::ios::binary);
+	if (!in) {
+		throw std::runtime_error("Cannot open file for reading: " + namef);
+	}
+
+	// Сохраняем важные параметры сетки
+	double a;
+	in.read(reinterpret_cast<char*>(&a), sizeof(double));
+	this->xL = a;
+	in.read(reinterpret_cast<char*>(&a), sizeof(double));
+	this->xR = a;
+	in.read(reinterpret_cast<char*>(&a), sizeof(double));
+	this->yL = a;
+	in.read(reinterpret_cast<char*>(&a), sizeof(double));
+	this->yR = a;
+	in.read(reinterpret_cast<char*>(&a), sizeof(double));
+	this->zL = a;
+	in.read(reinterpret_cast<char*>(&a), sizeof(double));
+	this->zR = a;
+
+	in.read(reinterpret_cast<char*>(this->Vn.data()), 3 * sizeof(double));
+	in.read(reinterpret_cast<char*>(this->Vt.data()), 3 * sizeof(double));
+	in.read(reinterpret_cast<char*>(this->Vm.data()), 3 * sizeof(double));
+
+	// Читаем размеры multi_array
+	size_t dims[3];
+	in.read(reinterpret_cast<char*>(dims), 3 * sizeof(size_t));
+
+	// Выделяем память под корневую сетку
+	this->cells.resize(boost::extents[dims[0]][dims[1]][dims[2]]);
+
+	for (size_t i = 0; i < dims[0]; ++i) 
+	{
+		for (size_t j = 0; j < dims[1]; ++j) 
+		{
+			for (size_t k = 0; k < dims[2]; ++k) 
+			{
+				this->cells[i][j][k] = new AMR_cell();
+				this->cells[i][j][k]->Read_cell(in);
+			}
+		}
+	}
 }
 
 void AMR_f::Print_info(void)

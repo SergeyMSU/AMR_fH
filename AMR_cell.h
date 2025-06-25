@@ -49,5 +49,8 @@ public:
 
 	void Slice_plane(AMR_f* AMR, const double& a, const double& b, const double& c, const double& d, std::vector < std::vector<std::array<double, 3>>>& points);
 	// Разрезать ячейку плоскостью
+
+	void Save_cell(std::ofstream& out);
+	void Read_cell(std::ifstream& in);
 };
 

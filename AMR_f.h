@@ -11,6 +11,11 @@ public:
 	double yR;
 	double zL;
 	double zR;
+
+	array<double, 3> Vn;
+	array<double, 3> Vt;
+	array<double, 3> Vm;
+
 	unsigned int xn;
 	unsigned int yn;
 	unsigned int zn;
@@ -38,6 +43,9 @@ public:
 	// Заполнить ячейки максвеллом
 
 	void Refine(void);
+
+	void Save(string namef);
+	void Read(string namef);
 
 
 	void Print_info(void);

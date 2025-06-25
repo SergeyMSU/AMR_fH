@@ -542,3 +542,55 @@ void AMR_cell::Slice_plane(AMR_f* AMR, const double& a, const double& b, const d
 	return;
 }
 
+void AMR_cell::Save_cell(std::ofstream& out)
+{
+	double h = this->f;
+	out.write(reinterpret_cast<const char*>(&h), sizeof(double));
+
+	size_t dims[3] = { this->cells.shape()[0], this->cells.shape()[1], this->cells.shape()[2] };
+	size_t n;
+	n = dims[0];
+	out.write(reinterpret_cast<const char*>(&n), sizeof(size_t));
+	n = dims[1];
+	out.write(reinterpret_cast<const char*>(&n), sizeof(size_t));
+	n = dims[2];
+	out.write(reinterpret_cast<const char*>(&n), sizeof(size_t));
+
+	// Записываем все ячейки
+	for (size_t i = 0; i < dims[0]; ++i)
+	{
+		for (size_t j = 0; j < dims[1]; ++j)
+		{
+			for (size_t k = 0; k < dims[2]; ++k)
+			{
+				this->cells[i][j][k]->Save_cell(out);
+			}
+		}
+	}
+
+}
+
+void AMR_cell::Read_cell(std::ifstream& in)
+{
+	in.read(reinterpret_cast<char*>(&this->f), sizeof(double));
+
+	size_t dims[3];
+	in.read(reinterpret_cast<char*>(dims), 3 * sizeof(size_t));
+
+	// Выделяем память под вложенный массив
+	this->cells.resize(boost::extents[dims[0]][dims[1]][dims[2]]);
+
+	// Рекурсивно читаем дочерние ячейки
+	for (size_t i = 0; i < dims[0]; ++i) 
+	{
+		for (size_t j = 0; j < dims[1]; ++j) 
+		{
+			for (size_t k = 0; k < dims[2]; ++k) 
+			{
+				this->cells[i][j][k] = new AMR_cell();
+				this->cells[i][j][k]->Read_cell(in);
+			}
+		}
+	}
+
+}
